@@ -1,0 +1,29 @@
+@startuml pill_reminder
+title Pill reminder
+actor "User" as user
+participant "App" as app
+
+== First time ==
+user -> app: put your data
+app -> app: save data in local storage
+app -> app: activate the background notifications
+
+== When user receives a notification ==
+app -> user: show notification
+alt user wants to take the pill
+    user -> app: click on notification
+    app -> app: mark the pill as taken
+    app -> app: remove the notification
+else user doesn't want to take the pill
+    user -> app: ignore the notification after 5 minutes
+    app -> app: remove the notification
+    app -> app: schedule the next notification for the next 1 hour
+end 
+
+alt if is end of the day and the user hasn't taken the pill
+    app -> app: mark pill as not taken this day
+end
+
+
+
+@enduml
