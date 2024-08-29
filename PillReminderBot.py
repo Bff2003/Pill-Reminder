@@ -9,15 +9,30 @@ class PillReminderBot:
     def __init__(self, token=None, pythonAnywhere=False):
         self.file_management = RegisterManagement()
         self.token = token
-        self.bot = telepot.Bot(token)
-        
+
         if pythonAnywhere:
             proxy_url = "http://proxy.server:3128"
-            proxies = {
-                'http': proxy_url,
-                'https': proxy_url,
+            telepot.api._pools = {
+                'default': urllib3.ProxyManager(
+                    proxy_url=proxy_url,
+                    num_pools=3,
+                    maxsize=10,
+                    retries=False,
+                    timeout=30
+                )
             }
-            self.bot = telepot.Bot(token, http_api={'proxy': proxies})
+            telepot.api._onetime_pool_spec = (
+                urllib3.ProxyManager,
+                dict(
+                    proxy_url=proxy_url,
+                    num_pools=1,
+                    maxsize=1,
+                    retries=False,
+                    timeout=30
+                )
+            )
+
+        self.bot = telepot.Bot(token)
         
         self.bot.message_loop(self.__handle_message)
     
