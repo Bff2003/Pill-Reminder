@@ -65,12 +65,20 @@ class RegisterManagement:
 
     def get_user_responses(self):
         return self.__data
+    
+    def get_user_response(self, chat_id, date: datetime = datetime.now()) -> str|None:
+        if not self.user_is_registered(chat_id):
+            raise Exception("User is not registered.")
+        
+        if self.__data.get(str(chat_id))["responses"].get(date.strftime('%Y-%m-%d')) is None:
+            return None
+        return self.__data.get(str(chat_id))["responses"].get(date.strftime('%Y-%m-%d'))["response"]
 
     def user_has_responded(self, chat_id, date: datetime = datetime.now()):
         if not self.user_is_registered(chat_id):
             raise Exception("User is not registered.")
         
-        return self.__data.get(str(chat_id)).get(date.strftime('%Y-%m-%d')) is not None
+        return self.__data.get(str(chat_id))["responses"].get(date.strftime('%Y-%m-%d')) is not None
     
     def get_registered_chats(self):
         return self.__data.keys()
