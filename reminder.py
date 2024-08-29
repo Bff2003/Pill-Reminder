@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 import time
 import asyncio
+import sys
 
 """
 {
@@ -47,32 +48,71 @@ class Reminder:
             json.dump(data, f, indent=4)
 
 if __name__ == "__main__":
-    load_dotenv(".env")
-    print("Starting bot...")
-    bot = PillReminderBot(os.getenv("TELEGRAM_TOKEN"))
-    print("Bot started.")
 
-    print("Starting reminder...")
-    reminder = Reminder()
-    print("Reminder started.")
+    params = sys.argv
+    params.pop(0)
 
-    print("Running new day...")
-    asyncio.run(reminder.run_new_day(bot))
-    print("New day ran.")
+    if len(params) > 0:
+        if params[0] == "--new-day" or params[0] == "-n":
+            load_dotenv(".env")
+            print("Starting bot...")
+            bot = PillReminderBot(os.getenv("TELEGRAM_TOKEN"))
+            print("Bot started.")
 
-    while True:
-        print(f"Checking reminder at {datetime.now()}")
-        if datetime.now().hour in reminder.HOURS:
+            print("Starting reminder...")
+            reminder = Reminder()
+            print("Reminder started.")
+
+            print("Running new day...")
+            asyncio.run(reminder.run_new_day(bot))
+            print("New day ran.")
+            sys.exit()
+
+        elif params[0] == "--reminder" or params[0] == "-r":
+            load_dotenv(".env")
+            print("Starting bot...")
+            bot = PillReminderBot(os.getenv("TELEGRAM_TOKEN"))
+            print("Bot started.")
+
+            print("Starting reminder...")
+            reminder = Reminder()
+            print("Reminder started.")
+
             print("Sending reminder...")
             asyncio.run(bot.send_reminder())
             print("Reminder sent.")
-            
-            print("Sleeping for 1 hour...")
-            time.sleep(60*60) # 1 hora
-            print("Waking up...")
-        
-        print("Sleeping for 1 minute...")
-        time.sleep(60) # 1 minuto
-        print("Waking up to check again in 1 minute...")
+            sys.exit()
+
+        elif params[0] == "--reminder-loop" or params[0] == "-rl":
+            load_dotenv(".env")
+            print("Starting bot...")
+            bot = PillReminderBot(os.getenv("TELEGRAM_TOKEN"))
+            print("Bot started.")
+
+            print("Starting reminder...")
+            reminder = Reminder()
+            print("Reminder started.")
+
+            while True:
+                print(f"Checking reminder at {datetime.now()}")
+                if datetime.now().hour in reminder.HOURS:
+                    print("Sending reminder...")
+                    asyncio.run(bot.send_reminder())
+                    print("Reminder sent.")
+                    
+                    print("Sleeping for 1 hour...")
+                    time.sleep(60*60)
+                else:
+                    print("Sleeping for 1 minute...")
+                    time.sleep(60)
+
+        elif params[0] == "--help" or params[0] == "-h":
+            print("Usage: python reminder.py [OPTION]")
+            print("Options:")
+            print("  -n, --new-day\t\t\tRun a new day")
+            print("  -r, --reminder\t\t\tSend a reminder")
+            print("  -rl, --reminder-loop\t\tSend a reminder every hour")
+            print("  -h, --help\t\t\t\tShow this help message")
+            sys.exit()
 
 
