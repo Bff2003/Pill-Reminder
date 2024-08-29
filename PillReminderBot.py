@@ -32,33 +32,39 @@ class PillReminderBot:
             await update.message.reply_text(f"[{datetime.now().strftime('%Y-%m-%d')}] Você já tomou a pílula hoje?", reply_markup=self.__keyboard())
         else:
             raise Exception("No chat_id or update provided.")
-        
+    
+    async def __on_start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await update.message.reply_text("Olá! Eu sou um bot que vai te ajudar a lembrar de tomar a pílula diariamente.")
+        if not self.file_management.user_is_registered(update.message.chat_id):
+            self.file_management.register_user(update.message.chat_id, update.message.from_user.first_name, update.message.from_user.id, update.message.from_user.is_bot, update.message.from_user.language_code, update.message.from_user.username)
+            await self.__send_help_message(update, context)
+
+        await self.__ask_question(update=update)
+        if self.file_management.user_has_responded(update.message.chat_id):
+            today_response = self.file_management.get_user_response(str(update.message.chat_id))
+            await update.message.reply_text(f"Você já respondeu a pergunta de hoje com '{today_response}'.\nCaso queira alterar a resposta, basta responder a mensagem referente ao dia que deseja alterar.")
+
+    async def __send_help_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await update.message.reply_text('\n'.join([
+            "/start - Inicia o bot",
+            "/help - Mostra esta mensagem de ajuda",
+            "",
+            "Todos os dias o bot vai perguntar se você tomou a pílula. Responda com 'Sim' ou 'Não' ou 'Não é dia de tomar'.",
+            "Caso não responda ou responda 'Não', o bot vai enviar um lembrete para você tomar a pílula.",
+            "",
+            "Caso queira alterar a resposta, basta responder a mensagem do bot referente ao dia que deseja alterar. Para isso basta verificar a data da mensagem [YYYY-MM-DD].",
+            "As mensagens que na qual deve responder são as '[YYYY-MM-DD] Você já tomou a pílula hoje?'."
+        ]))
+
     async def __handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        print('Handling message...')
-        print(update)
         chat_id = update.message.chat_id
         command = update.message.text
 
         if command == '/start':
-            if not self.file_management.user_is_registered(chat_id):
-                self.file_management.register_user(chat_id, update.message.from_user.first_name, update.message.from_user.id, update.message.from_user.is_bot, update.message.from_user.language_code, update.message.from_user.username)
-            print('Starting...')
-            await update.message.reply_text("Olá! Eu sou um bot que vai te ajudar a lembrar de tomar a pílula diariamente.")
-            await self.__ask_question(update=update)
-            if self.file_management.user_has_responded(chat_id):
-                await update.message.reply_text(f"Você já respondeu a pergunta de hoje com '{self.file_management.get_user_responses()[str(chat_id)][datetime.now().strftime('%Y-%m-%d')]['response']}'.\nCaso queira alterar a resposta, basta responder a mensagem referente ao dia que deseja alterar.")
+            await self.__on_start_command(update, context)
 
         elif command == "/help":
-            await update.message.reply_text('\n'.join([
-                "/start - Inicia o bot",
-                "/help - Mostra esta mensagem de ajuda",
-                "",
-                "Todos os dias o bot vai perguntar se você tomou a pílula. Responda com 'Sim' ou 'Não' ou 'Não é dia de tomar'.",
-                "Caso não responda ou responda 'Não', o bot vai enviar um lembrete para você tomar a pílula.",
-                "",
-                "Caso queira alterar a resposta, basta responder a mensagem do bot referente ao dia que deseja alterar. Para isso basta verificar a data da mensagem [YYYY-MM-DD].",
-                "As mensagens que na qual deve responder são as '[YYYY-MM-DD] Você já tomou a pílula hoje?'."
-            ]))
+            await self.__send_help_message(update, context)
 
         if command in ["Sim", "Não", "Não é dia de tomar"]:
             if update.message.reply_to_message:
