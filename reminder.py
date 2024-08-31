@@ -6,6 +6,7 @@ from datetime import datetime
 import time
 import asyncio
 import sys
+from Logger import Logger
 
 """
 {
@@ -18,6 +19,8 @@ class Reminder:
     HOURS = [9, 13, 16, 18, 22]
 
     def __init__(self, bot: PillReminderBot):
+        self.logger = Logger("Reminder").get_logger()
+        self.logger.info("Reminder started.")
         self.__create_runs_file()
         self.bot = bot
 
@@ -27,54 +30,72 @@ class Reminder:
             "runs" ["YYYY-MM-DD", "YYYY-MM-DD"]
         }
         """
+        self.logger.info("Creating runs file...")
         if not os.path.exists(self.RUNS_FILE):
+            self.logger.info("Runs file not found.")
             with open(self.RUNS_FILE, 'w') as f:
                 data = {
                     "runs": []
                 }
                 json.dump(data, f, indent=4)
+            self.logger.info("Runs file created.")
         else:  
+            self.logger.info("Runs file found.")
             self.__load_runs_file()
+            self.logger.info("Runs file loaded.")
     
     def __load_runs_file(self) -> dict:
+        self.logger.info("Loading runs file...")
         with open(self.RUNS_FILE, 'r') as f:
             return json.load(f)
     
     async def run_new_day(self) -> None:
+        self.logger.info("Running new day...")
         data = self.__load_runs_file()
         if datetime.now().strftime('%Y-%m-%d') not in data['runs']:
+            self.logger.info("Sending alert new day...")
             await self.bot.send_alert_new_day()
+            self.logger.info("Alert new day sent.")
             data['runs'].append(datetime.now().strftime('%Y-%m-%d'))
+        
+        self.logger.info("Saving runs file...")
         with open(self.RUNS_FILE, 'w') as f:
             json.dump(data, f, indent=4)
+        self.logger.info("Runs file saved.")
 
     async def run_new_day_loop(self) -> None:
+        self.logger.info("Running new day loop...")
         hours = [9]
+        self.logger.info("New day loop started.")
         while True:
             if datetime.now().hour in hours:
-                print("Running new day...")
+                self.logger.info("It's time to run new day.")
                 await self.run_new_day()
-                print("New day ran.")
+                self.logger.info("New day ran.")
                 
-                print("Sleeping for 20 hour...")
+                self.logger.info("Sleeping for 20 hours...")
                 time.sleep(60*60*20)
+                self.logger.info("Waking up.")
             else:
-                print("Sleeping for 15 minute...")
+                self.logger.info("Sleeping for 15 minutes...")
                 time.sleep(60*15)
+                self.logger.info("Waking up.")
 
     async def run_reminder_loop(self) -> None:
+        self.logger.info("Running reminder loop...")
         while True:
-            print(f"Checking reminder at {datetime.now()}")
             if datetime.now().hour in self.HOURS:
-                print("Sending reminder...")
+                self.logger.info("It's time to send reminder.")
                 await self.bot.send_reminder()
-                print("Reminder sent.")
+                self.logger.info("Reminder sent.")
                 
-                print("Sleeping for 1 hour...")
+                self.logger.info("Sleeping for 1 hour...")
                 time.sleep(60*60)
+                self.logger.info("Waking up.")
             else:
-                print("Sleeping for 1 minute...")
+                self.logger.info("Sleeping for 15 minutes...")
                 time.sleep(60)
+                self.logger.info("Waking up.")
 
 if __name__ == "__main__":
     params = sys.argv
