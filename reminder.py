@@ -70,24 +70,16 @@ class Reminder:
 
     async def run_new_day_loop(self) -> None:
         self.logger.info("run_new_day_loop - Running new day loop...")
-        hours = [9]
+        min_hour = 9
         self.logger.info("run_new_day_loop - New day loop started.")
         while True:
-            if datetime.now().hour in hours:
+            if datetime.now().hour >= min_hour and not self.__has_run_today():
                 self.logger.info("run_new_day_loop - It's time to run new day.")
                 await self.run_new_day()
                 self.logger.info("run_new_day_loop - New day ran.")
                 
                 self.logger.info("run_new_day_loop - Sleeping for 20 hours...")
                 await asyncio.sleep(60*60*20)
-                self.logger.info("run_new_day_loop - Waking up.")
-            elif datetime.now().hour > 9 and not self.__has_run_today():
-                self.logger.info("run_new_day_loop - It's time to send alert new day.")
-                await self.bot.send_alert_new_day()
-                self.logger.info("run_new_day_loop - Alert new day sent.")
-                
-                self.logger.info("run_new_day_loop - Sleeping for 20 hours...")
-                await asyncio.sleep(60*60*2)
                 self.logger.info("run_new_day_loop - Waking up.")
             else:
                 self.logger.info("run_new_day_loop - Sleeping for 15 minutes...")
