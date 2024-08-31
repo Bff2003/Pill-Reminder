@@ -48,6 +48,11 @@ class Reminder:
         self.logger.info("Loading runs file...")
         with open(self.RUNS_FILE, 'r') as f:
             return json.load(f)
+        
+    def __has_run_today(self) -> bool:
+        self.logger.info("Checking if has run today...")
+        data = self.__load_runs_file()
+        return datetime.now().strftime('%Y-%m-%d') in data['runs']
     
     async def run_new_day(self) -> None:
         self.logger.info("Running new day...")
@@ -64,38 +69,46 @@ class Reminder:
         self.logger.info("Runs file saved.")
 
     async def run_new_day_loop(self) -> None:
-        self.logger.info("Running new day loop...")
+        self.logger.info("run_new_day_loop - Running new day loop...")
         hours = [9]
-        self.logger.info("New day loop started.")
+        self.logger.info("run_new_day_loop - New day loop started.")
         while True:
             if datetime.now().hour in hours:
-                self.logger.info("It's time to run new day.")
+                self.logger.info("run_new_day_loop - It's time to run new day.")
                 await self.run_new_day()
-                self.logger.info("New day ran.")
+                self.logger.info("run_new_day_loop - New day ran.")
                 
-                self.logger.info("Sleeping for 20 hours...")
-                time.sleep(60*60*20)
-                self.logger.info("Waking up.")
+                self.logger.info("run_new_day_loop - Sleeping for 20 hours...")
+                await asyncio.sleep(60*60*20)
+                self.logger.info("run_new_day_loop - Waking up.")
+            elif datetime.now().hour > 9 and not self.__has_run_today():
+                self.logger.info("run_new_day_loop - It's time to send alert new day.")
+                await self.bot.send_alert_new_day()
+                self.logger.info("run_new_day_loop - Alert new day sent.")
+                
+                self.logger.info("run_new_day_loop - Sleeping for 20 hours...")
+                await asyncio.sleep(60*60*2)
+                self.logger.info("run_new_day_loop - Waking up.")
             else:
-                self.logger.info("Sleeping for 15 minutes...")
-                time.sleep(60*15)
-                self.logger.info("Waking up.")
+                self.logger.info("run_new_day_loop - Sleeping for 15 minutes...")
+                await asyncio.sleep(60*15)
+                self.logger.info("run_new_day_loop - Waking up.")
 
     async def run_reminder_loop(self) -> None:
-        self.logger.info("Running reminder loop...")
+        self.logger.info("run_reminder_loop - Running reminder loop...")
         while True:
             if datetime.now().hour in self.HOURS:
-                self.logger.info("It's time to send reminder.")
+                self.logger.info("run_reminder_loop - It's time to send reminder.")
                 await self.bot.send_reminder()
-                self.logger.info("Reminder sent.")
+                self.logger.info("run_reminder_loop - Reminder sent.")
                 
-                self.logger.info("Sleeping for 1 hour...")
-                time.sleep(60*60)
-                self.logger.info("Waking up.")
+                self.logger.info("run_reminder_loop - Sleeping for 1 hour...")
+                await asyncio.sleep(60*60)
+                self.logger.info("run_reminder_loop - Waking up.")
             else:
-                self.logger.info("Sleeping for 15 minutes...")
-                time.sleep(60)
-                self.logger.info("Waking up.")
+                self.logger.info("run_reminder_loop - Sleeping for 15 minutes...")
+                await asyncio.sleep(60)
+                self.logger.info("run_reminder_loop - Waking up.")
 
 if __name__ == "__main__":
     params = sys.argv

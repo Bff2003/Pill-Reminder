@@ -23,8 +23,8 @@ async def main():
 
     logger.info("Starting tasks...")
     tasks = [
-        asyncio.create_task(await reminder.run_reminder_loop()),
-        asyncio.create_task(await reminder.run_new_day_loop()),
+        asyncio.create_task(reminder.run_reminder_loop()),
+        asyncio.create_task(reminder.run_new_day_loop()),
         asyncio.create_task(bot.start())
     ]
     logger.info("Tasks started.")

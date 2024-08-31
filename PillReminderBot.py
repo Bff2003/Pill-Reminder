@@ -44,7 +44,7 @@ class PillReminderBot:
         
         self.bot.message_loop(self.__handle_message)
     
-    def start(self):
+    async def start(self):
         self.logger.info("Bot started.")
         while True:
             time.sleep(10)
